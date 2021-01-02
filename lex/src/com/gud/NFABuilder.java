@@ -180,7 +180,7 @@ public class NFABuilder {
             NFAState temp=new NFAState(nfa,248,startState);
             startState=temp;
             nfa.addEndFunc(nfaFragment.endState, entry.getValue());
-            nfa.setStartState(startState.getId());
+            nfa.setStartStateId(startState.getId());
         }
         return nfa;
     }

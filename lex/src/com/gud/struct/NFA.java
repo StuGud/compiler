@@ -7,10 +7,10 @@ import java.util.Map;
  * Created By Gud on 2020/12/29 2:41 下午
  */
 public class NFA {
-    private int startState=0;
+    private int startStateId =0;
 
-    public void setStartState(int startState) {
-        this.startState = startState;
+    public void setStartStateId(int startStateId) {
+        this.startStateId = startStateId;
     }
 
     private int size;
@@ -40,11 +40,11 @@ public class NFA {
 
     public NFAState getStartState(){
         if(size>=1){
-            return nfaStateMap.get(1);
+            return nfaStateMap.get(startStateId);
         }else{
             NFAState startState=new NFAState(this);
-            size++;
-            nfaStateMap.put(1,startState);
+            storeNfaState(startState);
+            startStateId=startState.getId();
             return startState;
         }
     }

@@ -7,23 +7,35 @@ import java.util.Set;
  * Created By Gud on 2020/12/29 2:41 下午
  */
 public class DFAState {
-    private int number=0;
-    private Set<Integer> identitySet;
-    private Map<Character,Integer> edge2StateMap;
+    private int id=0;
+    private Set<NFAState> nfaStateSet;
+    private Map<Integer,DFAState> edge2StateMap;
 
-    public int getNumber() {
-        return number;
+    public DFAState(Set<NFAState> nfaStateSet) {
+        this.nfaStateSet = nfaStateSet;
     }
 
-    public void setNumber(int number) {
-        this.number = number;
+    public int getId() {
+        return id;
     }
 
-    public Set<Integer> getIdentitySet() {
-        return identitySet;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public Map<Character, Integer> getEdge2StateMap() {
+    public Set<NFAState> getNFAStateSet() {
+        return nfaStateSet;
+    }
+
+    public void setNFAStateSet(Set<NFAState> nfaSet) {
+        this.nfaStateSet = nfaSet;
+    }
+
+    public Map<Integer, DFAState> getEdge2StateMap() {
         return edge2StateMap;
+    }
+
+    public void setEdge2StateMap(Map<Integer, DFAState> edge2StateMap) {
+        this.edge2StateMap = edge2StateMap;
     }
 }
