@@ -1,19 +1,41 @@
 package com.gud;
 
+import com.gud.struct.NFA;
+import com.gud.struct.NFAFragment;
+
+import java.io.*;
+
 /**
  * Created By Gud on 2020/12/29 2:50 上午
  */
 public class Test {
-    public static void main(String[] args) {
-        System.out.println(".".equals("."));
-        //System.out.println("\v");
+    public static void main(String[] args) throws IOException {
+        System.out.println((char) 248);
 
-        String[] split={"a","c","\t"};
+        //new Test().testNFABuilder();
 
-        System.out.println(String.join("",split));
-        System.out.println(split.toString());
+        //new EscapeUtil().escapeFormalizedStr("\\+abc\\*");
 
-        String formalizedReg = new RegFormalizer().formalize("[ \\t\\v\\n\\f]");
+        //new Test().readFile();
+
+    }
+
+    private void testNFABuilder(){
+        String formalizedReg ="abc||*";
+        NFAFragment nfaFragment = new NFABuilder().buildNFAFragment(formalizedReg.split(""), new NFA());
+        System.out.println(nfaFragment);
+    }
+
+    private void readFile() throws IOException {
+        File file = new File("lex/src/com/gud/test.l");
+        BufferedReader buf = new BufferedReader(new FileReader(file));
+
+        String lineStr = buf.readLine();
+
+        System.out.println((int)"ø".toCharArray()[0]);
+
+        String formalizedReg = new RegFormalizer().formalize(lineStr);
         System.out.println(formalizedReg);
+        System.out.println(new NFABuilder().postifx(formalizedReg));
     }
 }

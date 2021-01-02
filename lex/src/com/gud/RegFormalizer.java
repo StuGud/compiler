@@ -129,12 +129,12 @@ public class RegFormalizer {
                 if (end != 0) {
                     String[] temp = new String[128];
                     for (int j = 0; j < 128; j++) {
-                        temp[i] = String.valueOf((char) i);
-                        if (escapeMap.containsKey(temp[i])) {
-                            temp[i] = escapeMap.get(temp[i]);
+                        temp[j] = String.valueOf((char) j);
+                        if (escapeMap.containsKey(temp[j])) {
+                            temp[j] = escapeMap.get(temp[j]);
                         }
-                        if (negCharSet.indexOf(temp[i]) != -1) {
-                            temp[i] = "";
+                        if (negCharSet.indexOf(temp[j]) != -1) {
+                            temp[j] = "";
                         }
                     }
                     split[i] = "(" + String.join("|", temp) + ")";
@@ -198,15 +198,17 @@ public class RegFormalizer {
                 if (starts.size() == ends.size()) {
                     Iterator<String> sIterator = starts.iterator();
                     Iterator<String> eIterator = ends.iterator();
+                    char endChar=0;
                     while (sIterator.hasNext()) {
                         //进行转义 /t 转为 t
                         char startChar = escapeStr(sIterator.next()).toCharArray()[0];
-                        char endChar = escapeStr(eIterator.next()).toCharArray()[0];
+                        endChar = escapeStr(eIterator.next()).toCharArray()[0];
                         for (int j = (int) startChar; j < (int) endChar; j++) {
-                            rangeContent.append(reverseEscapedStr(String.valueOf((char) j)) + "|");
+                            rangeContent.append(escapeStr(String.valueOf((char) j)) + "|");
                         }
-                        rangeContent.append(reverseEscapedStr(String.valueOf(endChar)));
+
                     }
+                    rangeContent.append(escapeStr(String.valueOf(endChar)));
                 } else {
                     System.out.println("sys.解析[?-?]出现问题");
                 }

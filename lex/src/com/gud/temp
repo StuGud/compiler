@@ -1,0 +1,13 @@
+ out1:9 out2:11
+ out1:2 out2:7
+ out1:4 out2:6
+startStateID:12
+startStateID:9
+startStateID:2 c:97 out1:1
+startStateID:1
+startStateID:7
+startStateID:4 c:98 out1:3
+startStateID:3
+startStateID:6 c:99 out1:5
+startStateID:5
+startStateID:11

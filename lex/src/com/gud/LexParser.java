@@ -19,10 +19,31 @@ import java.util.Map;
 public class LexParser {
 
     //
-    Map<String, String> def_Map = new HashMap<>();
-    Map<String, String> exp_Map = new HashMap<>();
-    List<String> includeStrList = new ArrayList<>();
-    List<String> commentStrList = new ArrayList<>();
+   private  Map<String, String> def_Map = new HashMap<>();
+    private  Map<String, String> exp_Map = new HashMap<>();
+    private List<String> includeStrList = new ArrayList<>();
+    private  List<String> commentStrList = new ArrayList<>();
+
+
+    public LexParser(String filename) throws IOException {
+        parseLexFile(filename);
+    }
+
+    public Map<String, String> getDef_Map() {
+        return def_Map;
+    }
+
+    public Map<String, String> getExp_Map() {
+        return exp_Map;
+    }
+
+    public List<String> getIncludeStrList() {
+        return includeStrList;
+    }
+
+    public List<String> getCommentStrList() {
+        return commentStrList;
+    }
 
     /**
      * @param filename
