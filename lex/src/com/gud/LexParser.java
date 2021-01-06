@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class LexParser {
 
-    //
+    //预定义
    private  Map<String, String> def_Map = new HashMap<>();
     private  Map<String, String> exp_Map = new HashMap<>();
     private List<String> includeStrList = new ArrayList<>();
