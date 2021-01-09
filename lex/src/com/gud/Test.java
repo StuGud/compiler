@@ -11,6 +11,7 @@ import java.io.*;
 public class Test {
     public static void main(String[] args) throws IOException {
         System.out.println((char) 248);
+        System.out.println((char) 100);
 
         //new Test().testNFABuilder();
 

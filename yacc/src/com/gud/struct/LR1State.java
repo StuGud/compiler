@@ -70,4 +70,11 @@ public class LR1State {
     }
 
 
+    public List<LR1Item> getItemList() {
+        return itemList;
+    }
+
+    public void setItemList(List<LR1Item> itemList) {
+        this.itemList = itemList;
+    }
 }

@@ -15,7 +15,12 @@ public class TransitionItem {
     //key:边 value:移入的状态
     Map<Integer,Integer> transMap;
 
-    public void addEdge(int edge,int next){
+    public TransitionItem(int id, LR1State lr1State) {
+        this.id = id;
+        this.lr1State = lr1State;
+    }
+
+    public void addEdge(int edge, int next){
         transMap.put(edge,next);
     }
 
@@ -37,5 +42,29 @@ public class TransitionItem {
             return false;
         }
         return map1.equals(map2);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public LR1State getLr1State() {
+        return lr1State;
+    }
+
+    public void setLr1State(LR1State lr1State) {
+        this.lr1State = lr1State;
+    }
+
+    public Map<Integer, Integer> getTransMap() {
+        return transMap;
+    }
+
+    public void setTransMap(Map<Integer, Integer> transMap) {
+        this.transMap = transMap;
     }
 }

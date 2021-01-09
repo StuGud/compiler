@@ -30,4 +30,44 @@ public class ProductionItem {
     public boolean equals(ProductionItem productionItem){
         return this.index== productionItem.index;
     }
+
+    public int getHead() {
+        return head;
+    }
+
+    public void setHead(int head) {
+        this.head = head;
+    }
+
+    public List<Integer> getBody() {
+        return body;
+    }
+
+    public void setBody(List<Integer> body) {
+        this.body = body;
+    }
+
+    public int getBodyLength() {
+        return bodyLength;
+    }
+
+    public void setBodyLength(int bodyLength) {
+        this.bodyLength = bodyLength;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getOp() {
+        return op;
+    }
+
+    public void setOp(int op) {
+        this.op = op;
+    }
 }

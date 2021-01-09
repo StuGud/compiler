@@ -48,5 +48,31 @@ public class LR1Item {
         return this.prod.equals(lr1Item.prod)&&this.dotLoc== lr1Item.dotLoc;
     }
 
+    public boolean isDotAtEnd(){
+        return dotLoc==prod.getBodyLength();
+    }
 
+    public ProductionItem getProd() {
+        return prod;
+    }
+
+    public void setProd(ProductionItem prod) {
+        this.prod = prod;
+    }
+
+    public int getDotLoc() {
+        return dotLoc;
+    }
+
+    public void setDotLoc(int dotLoc) {
+        this.dotLoc = dotLoc;
+    }
+
+    public Set<Integer> getPredSet() {
+        return predSet;
+    }
+
+    public void setPredSet(Set<Integer> predSet) {
+        this.predSet = predSet;
+    }
 }
