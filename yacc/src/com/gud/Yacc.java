@@ -16,8 +16,7 @@ public class Yacc {
         lr1Builder.initParseTable();
 
         CppBuilder cppBuilder=new CppBuilder(lr1Builder);
-        cppBuilder.outputTable();
-        cppBuilder.outputLRStateSet();
+        cppBuilder.generateParseProgram();
 
         System.out.println("end");
     }

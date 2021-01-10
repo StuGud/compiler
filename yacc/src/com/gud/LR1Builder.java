@@ -14,7 +14,7 @@ public class LR1Builder {
 
     //终结符部分
     Map<String, Integer> terminalMap = new HashMap<>();
-    //@todo meaning?
+
     Map<Integer, Boolean> leftAssociativeMap = new HashMap<>();
     Map<Integer, Integer> priorityMap = new HashMap<>();
 
@@ -219,8 +219,6 @@ public class LR1Builder {
         }
         return lr1State;
     }
-
-
 
 
     private LR1State findGOTO(LR1State lr1State, int edge) {
