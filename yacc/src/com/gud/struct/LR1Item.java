@@ -49,7 +49,7 @@ public class LR1Item {
     }
 
     public boolean isDotAtEnd(){
-        return dotLoc==prod.getBodyLength();
+        return dotLoc==prod.getBody().size();
     }
 
     public ProductionItem getProd() {

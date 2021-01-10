@@ -13,7 +13,7 @@ public class TransitionItem {
     int id;
     LR1State lr1State;
     //key:边 value:移入的状态
-    Map<Integer,Integer> transMap;
+    Map<Integer,Integer> transMap=new HashMap<>();
 
     public TransitionItem(int id, LR1State lr1State) {
         this.id = id;

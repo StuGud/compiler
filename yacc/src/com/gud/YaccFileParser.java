@@ -2,9 +2,6 @@ package com.gud;
 
 import com.gud.struct.ProductionItem;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,21 +12,27 @@ import java.util.*;
  */
 public class YaccFileParser {
 
-    Map<String, Integer> nonTerminalMap = new HashMap<>();
+    //所有符号
+    List<String> symbols = new ArrayList<>();
+
+    //终结符部分
     Map<String, Integer> terminalMap = new HashMap<>();
-    Map<Integer, Boolean> isNonTerminalNullableMap = new HashMap<>();
     //@todo meaning?
     Map<Integer, Boolean> leftAssociativeMap = new HashMap<>();
-
     Map<Integer, Integer> priorityMap = new HashMap<>();
 
-    Vector<String> words = new Vector<>();
+    //非终结符部分
+    Map<String, Integer> nonTerminalMap = new HashMap<>();
+    Map<Integer, Boolean> isNonTerminalNullableMap = new HashMap<>();
 
-    Map<Integer, String> productionActionMap = new HashMap<>();
+    //产生式以及对应的action语法制导翻译
     List<ProductionItem> productionItemDeque = new ArrayList<>();
+    Map<Integer, String> productionActionMap = new HashMap<>();
 
-    int indexSymbol = 0;
+    int symbolIndex = 0;
 
+    //.y文件里面的预定义程序部分
+    String predefinedProgram;
 
     public void parseYaccFile(String filename) throws IOException {
         String content = new String(Files.readAllBytes(Paths.get(filename)));
@@ -38,9 +41,29 @@ public class YaccFileParser {
             throw new IOException("YACC文件不完整");
         }
 
+        System.out.println("开始解析.y文件");
+
         parseDefineSegment(segments[0]);
         parseGrammarSegment(segments[1]);
         parseProgramSegment(segments[2]);
+
+        System.out.println(".y文件解析完成");
+    }
+
+
+    private enum TokenType {
+        TOKEN, LEFT, RIGHT, START, NONE
+    }
+
+    private int saveSymbol(String symbol, Map<String, Integer> map) {
+        if (map.containsKey(symbol)) {
+            return map.get(symbol);
+        } else {
+            map.put(symbol, symbolIndex);
+            symbols.add(symbol);
+            ++symbolIndex;
+            return symbolIndex - 1;
+        }
     }
 
 
@@ -54,7 +77,7 @@ public class YaccFileParser {
         String[] lines = defineSegment.split(System.lineSeparator());
         for (int i = 0; i < lines.length; i++) {
 
-            String line = lines[i].replaceAll("\t", " ");
+            String line = lines[i].replaceAll("\t|\n|\r", " ");
             //@todo 分隔符可能存在问题
             String[] split = line.split(" ");
 
@@ -78,16 +101,20 @@ public class YaccFileParser {
                 if (!"".equals(split[j])) {
                     //去除单引号
                     String s = removeSingleQuote(split[j]);
-                    terminalMap.put(s, indexSymbol);
-                    priorityMap.put(indexSymbol, curPriority);
-                    leftAssociativeMap.put(indexSymbol, tokenType == TokenType.LEFT);
-                    words.add(s);
-                    ++indexSymbol;
+                    int curSymbolIndex = saveSymbol(s, terminalMap);
+                    priorityMap.put(curSymbolIndex, curPriority);
+                    leftAssociativeMap.put(curSymbolIndex, tokenType == TokenType.LEFT);
                 }
             }
         }
     }
 
+    /**
+     * 去除单引号
+     *
+     * @param s
+     * @return
+     */
     private String removeSingleQuote(String s) {
         if (s != null && s.startsWith("\'") && s.endsWith("\'") && s.length() > 2) {
             s = s.substring(1, s.length() - 1);
@@ -97,17 +124,21 @@ public class YaccFileParser {
 
     private void parseGrammarSegment(String grammarSegment) {
 
+        String[] lines = grammarSegment.split(System.lineSeparator());
+
         int state = 0;
         //匹配 { }
         int braceMatchFlag = 0;
         int productionHead = -1;
-        String[] lines = grammarSegment.split(System.lineSeparator());
-        List<Integer> productionBody = new ArrayList<>();
+
 
         int numOfProd = 0;
 
         for (int i = 0; i < lines.length; i++) {
-            String line = lines[i].replaceAll("\t", " ");
+
+            //System.out.println("line:"+i);
+
+            String line = lines[i].replaceAll("\t|\n|\r", " ");
             if ("".equals(line)) {
                 continue;
             }
@@ -117,59 +148,54 @@ public class YaccFileParser {
                     line = line.replaceAll(" ", "");
                     if ("".equals(line)) {
                         continue;
-                    } else {
-                        if (nonTerminalMap.containsKey(line)) {
-                            productionHead = nonTerminalMap.get(line);
-                        } else {
-                            nonTerminalMap.put(line, indexSymbol);
-                            //默认新保存的非终结符不产生空串
-                            isNonTerminalNullableMap.put(indexSymbol, false);
-                            words.add(line);
-                            productionHead = indexSymbol;
-                            ++indexSymbol;
-                        }
-                        state = 1;
                     }
+                    productionHead = saveSymbol(line, nonTerminalMap);
+
+                    //默认新保存的非终结符不产生空串
+                    isNonTerminalNullableMap.put(productionHead, false);
+                    state = 1;
                     break;
                 }
+
                 case 1: {
                     //读取产生式
                     String[] split = line.split(" ");
-                    System.out.println(split);
                     for (int j = 0; j < split.length; j++) {
                         if ("".equals(split[j])) {
                             continue;
                         }
+
                         if (":".equals(split[j]) || "|".equals(split[j])) {
+                            List<Integer> productionBody = new ArrayList<>();
                             //产生式
                             j++;
                             while (j < split.length) {
-                                String s = removeSingleQuote(split[j], productionBody);
-                                if ("".equals(s)) {
+
+                                if ("".equals(split[j])) {
+                                    j++;
                                     continue;
                                 }
-                                if(!split[j].startsWith("\'")){
-                                    if (nonTerminalMap.containsKey(s)) {
-                                        productionBody.add(nonTerminalMap.get(s));
-                                    } else {
-                                        nonTerminalMap.put(s, indexSymbol);
-                                        isNonTerminalNullableMap.put(indexSymbol, false);
-                                        words.add(s);
-                                        productionBody.add(indexSymbol);
-                                        ++indexSymbol;
-                                    }
+                                //是非终结符，还是终结符
+                                int curSymbolIndex = 0;
+                                if (!split[j].startsWith("\'")) {
+                                    curSymbolIndex = saveSymbol(split[j], nonTerminalMap);
+                                    isNonTerminalNullableMap.put(curSymbolIndex, false);
+                                } else {
+                                    String s = removeSingleQuote(split[j]);
+                                    curSymbolIndex = saveSymbol(s, terminalMap);
                                 }
+                                productionBody.add(curSymbolIndex);
                                 j++;
                             }
+
                             //保存产生式
                             productionItemDeque.add(new ProductionItem(productionHead, productionBody, productionBody.size(), numOfProd++));
 
-                            //@todo 判断产生式是否产生空串
-                            if(productionBody.isEmpty()){
-                                isNonTerminalNullableMap.put(productionHead,true);
+                            //判断产生式是否产生空串
+                            if (productionBody.isEmpty()) {
+                                isNonTerminalNullableMap.put(productionHead, true);
                             }
-
-                            productionBody.clear();
+                            //productionBody.clear();
 
                         } else if ("{".equals(split[j])) {
                             //action part 定义动作
@@ -180,7 +206,8 @@ public class YaccFileParser {
                             while (j < split.length) {
                                 if ("}".equals(split[j]) && braceMatchFlag == 1) {
                                     --braceMatchFlag;
-                                    productionActionMap.put(numOfProd, sb.toString());
+                                    //@todo 注意numOfProd-1
+                                    productionActionMap.put(numOfProd-1, sb.toString());
                                 } else {
                                     sb.append(split[j]);
                                     sb.append(" ");
@@ -189,11 +216,9 @@ public class YaccFileParser {
                                     } else if ("}".equals(split[j])) {
                                         braceMatchFlag--;
                                     }
-
                                 }
                                 j++;
                             }
-
                         } else if (";".equals(split[j])) {
                             state = 0;
                         } else {
@@ -210,45 +235,11 @@ public class YaccFileParser {
         }
 
         //@todo translateAction
-
-        terminalMap.put("$",indexSymbol);
-        words.add("$");
-        indexSymbol++;
-
-
-
+        saveSymbol("$",terminalMap);
     }
 
-    /**
-     * 去除单引号;终结符
-     *
-     * @param s
-     * @return
-     */
-    private String removeSingleQuote(String s, List<Integer> productionBody) {
-        if (s != null && s.startsWith("\'") && s.endsWith("\'") && s.length() > 2) {
-            s = s.substring(1, s.length() - 1);
-            if (terminalMap.containsKey(s)) {
-                productionBody.add(terminalMap.get(s));
-            } else {
-                terminalMap.put(s, indexSymbol);
-                words.add(s);
-                productionBody.add(indexSymbol);
-                indexSymbol++;
-            }
-        }
-        return s;
-    }
 
     private void parseProgramSegment(String programSegment) {
-
+        predefinedProgram =programSegment;
     }
-
-    enum TokenType {
-        TOKEN, LEFT, RIGHT, START, NONE
-    }
-
-
-
-
 }
