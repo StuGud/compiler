@@ -35,7 +35,7 @@ public class Test {
 
         System.out.println((int)"ø".toCharArray()[0]);
 
-        String formalizedReg = new RegFormalizer().formalize(lineStr);
+        String[] formalizedReg = new RegFormalizer().formalize(lineStr);
         System.out.println(formalizedReg);
         System.out.println(new NFABuilder().postifx(formalizedReg));
     }

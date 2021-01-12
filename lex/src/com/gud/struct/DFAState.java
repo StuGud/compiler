@@ -1,5 +1,7 @@
 package com.gud.struct;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,8 +10,8 @@ import java.util.Set;
  */
 public class DFAState {
     private int id=0;
-    private Set<NFAState> nfaStateSet;
-    private Map<Integer,DFAState> edge2StateMap;
+    private Set<NFAState> nfaStateSet=new HashSet<>();
+    private Map<Integer,DFAState> edge2StateMap=new HashMap<>();
 
     public DFAState(Set<NFAState> nfaStateSet) {
         this.nfaStateSet = nfaStateSet;

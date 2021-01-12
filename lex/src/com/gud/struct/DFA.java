@@ -1,9 +1,6 @@
 package com.gud.struct;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created By Gud on 2020/12/29 2:41 下午
@@ -13,8 +10,8 @@ public class DFA {
 
     int startStateId=0;
     //存储标号对应状态
-    Map<Integer,DFAState>  stateMap;
-    Map<DFAState, Set<String>> endFuncMap;
+    Map<Integer,DFAState>  stateMap=new HashMap<>();
+    Map<DFAState, Set<String>> endFuncMap=new HashMap<>();
 
 
     public void storeState(DFAState state){

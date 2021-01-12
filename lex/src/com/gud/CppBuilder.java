@@ -3,20 +3,108 @@ package com.gud;
 import com.gud.struct.DFA;
 import com.gud.struct.DFAState;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created By Gud on 2021/1/2 4:42 下午
  */
 public class CppBuilder {
 
-    public void buildCpp(DFA dfa,LexParser lexParser) {
+    DFA dfa;
+    Map<DFAState, Set<String>> endFuncMap=new HashMap<>();
+    Map<Integer, DFAState> stateMap=new HashMap<>();
+
+
+    public CppBuilder(DFA dfa) {
+       this.dfa=dfa;
+        endFuncMap = dfa.getEndFuncMap();
+        stateMap = dfa.getStateMap();
+    }
+
+    public void outputProgram(){
+        outputTable();
+        outputAction();
+    }
+
+    private void outputAction() {
+
+        StringBuilder sb=new StringBuilder();
+
+        sb.append("#ifndef _ACTION_LEX_H\n");
+        sb.append("#define _ACTION_LEX_H\n");
+        sb.append("#include <set>\n");
+
+        sb.append("void initFinalSet(std::set<unsigned int>& finalSet) {\n");
+        for (Map.Entry<DFAState,Set<String>> entry:dfa.getEndFuncMap().entrySet()){
+            sb.append("finalSet.insert("+entry.getKey().getId()+ ");\n");
+        }
+        sb.append("}\n\n");
+
+        sb.append("std::string performAction(unsigned int state) {\n");
+        sb.append("switch(state) {\n");
+        for (Map.Entry<DFAState,Set<String>> entry:dfa.getEndFuncMap().entrySet()){
+            sb.append("case "+entry.getKey().getId()+": {");
+            for(String endFunc: entry.getValue()){
+                sb.append(endFunc);
+            }
+            sb.append("\n}\n");
+        }
+        sb.append("default: return \"\";\n");
+        sb.append("}\n");
+        sb.append("}// end function\n");
+
+        sb.append("#endif //_ACTION_LEX_H\n");
+
+        writeFile("output/actionLex.h",sb.toString());
+    }
+
+    private void outputTable() {
+        StringBuilder sb=new StringBuilder();
+
+        sb.append("#ifndef _TABLE_LEX_H\n");
+        sb.append("#define _TABLE_LEX_H\n");
+        sb.append("#include <vector>\n");
+        sb.append("#include <map>\n");
+
+        sb.append("void initMinDFAStateTranfer(std::vector<std::map<char, unsigned int> >* _minDFAStateTranfer) {\n");
+        sb.append("std::map<char, unsigned int> tran;\n");
+
+        //@todo
+        for (int i = 1; i <= dfa.getStateMap().size(); i++) {
+            sb.append("// state " + i + ";\n");
+            System.out.println(i);
+            for (Map.Entry<Integer,DFAState> entry: dfa.getStateMap().get(i).getEdge2StateMap().entrySet()){
+                sb.append("tran.insert(std::make_pair(\'"+(char)(int)entry.getKey()+"\',"+entry.getValue().getId()+"));\n");
+            }
+            sb.append("_minDFAStateTranfer->push_back(tran);\n");
+            sb.append("tran.swap(std::map<char, unsigned int>());\n\n");
+        }
+        sb.append("}\n");
+
+        sb.append("#endif //_TABLE_LEX_H\n");
+
+        writeFile("output/tableLex.h",sb.toString());
+    }
+
+    /**
+     *
+     * @deprecated 废弃
+     * @param dfa
+     * @param lexFileParser
+     */
+    public void buildCpp(DFA dfa, LexFileParser lexFileParser) {
         StringBuilder sb = new StringBuilder();
 
-        List<String> includeStrList = lexParser.getIncludeStrList();
-        for(String s:includeStrList){
-            sb.append(s+"\n");
+        List<String> includeStrList = lexFileParser.getIncludeStrList();
+        for (String s : includeStrList) {
+            sb.append(s + "\n");
         }
 
         String head = "#include <iostream>\n" +
@@ -49,18 +137,38 @@ public class CppBuilder {
                 "   }";
         sb.append(head);
 
-        List<String> commentStrList = lexParser.getCommentStrList();
+        List<String> commentStrList = lexFileParser.getCommentStrList();
         //@todo 这边格式注意一下
-        for(String s:commentStrList){
-            sb.append(s+"\n");
+        for (String s : commentStrList) {
+            sb.append(s + "\n");
         }
 
-        for(Map.Entry<Integer, DFAState> entry:dfa.getStateMap().entrySet()){
+        for (Map.Entry<Integer, DFAState> entry : dfa.getStateMap().entrySet()) {
 
         }
 
 
+    }
 
+    private void writeFile(String filename, String data) {
+        try {
+            File file = new File(filename);
+
+            //if file doesnt exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            //true = append file
+            FileWriter fileWriter = new FileWriter(file.getName(), true);
+            BufferedWriter bufferWriter = new BufferedWriter(fileWriter);
+
+            bufferWriter.write(data);
+
+            bufferWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -20,8 +20,8 @@ public class CppBuilder {
     List<TransitionItem> lr1StateTransitionList = new ArrayList<>();
     List<List<TableItem>> lr1ParseTable = new ArrayList<>();
 
-    Map<Integer, List<TableItem>> lalr1ParseTable = new HashMap<>();
-    Map<Integer, TransitionItem> lalr1StateTransitionMap = new HashMap<>();
+    Map<Integer,List<TableItem>> lalr1ParseTable=new HashMap<>();
+    Map<Integer,TransitionItem> lalr1StateTransitionMap=new HashMap<>();
 
     //产生式以及对应的action语法制导翻译
     List<ProductionItem> productionItemDeque = new ArrayList<>();
@@ -33,6 +33,8 @@ public class CppBuilder {
         symbols = lr1Builder.symbols;
         lr1StateTransitionList = lr1Builder.lr1StateTransitionList;
         lr1ParseTable = lr1Builder.lr1ParseTable;
+        productionItemDeque=lr1Builder.productionItemDeque;
+        productionActionMap=lr1Builder.productionActionMap;
 
     }
 
@@ -195,7 +197,7 @@ public class CppBuilder {
         for (Map.Entry<Integer, String> entry : productionActionMap.entrySet()) {
             char[] actionSplit = entry.getValue().toCharArray();
             String translatedAction = "";
-            for (int i = 0; i < actionSplit.length; i++) {
+            for (int i = 0; i < actionSplit.length;) {
                 if ('$' == actionSplit[i]) {
                     i++;
                     if ('$' == actionSplit[i]) {
@@ -277,7 +279,12 @@ public class CppBuilder {
                 sb.append(symbols.get(curSymbol) + " ");
             }
             //执行该动作产生的动作
-            sb.append("\n" + productionActionMap.get(i) + "\n");
+            sb.append("\n");
+            if(productionActionMap.containsKey(i)){
+                sb.append( productionActionMap.get(i) );
+            }
+            sb.append("\n");
+
             sb.append("return std::pair<unsigned int, std::string>("
                     + productionItemDeque.get(i).getBodyLength() + ",\""
                     + symbols.get(productionItemDeque.get(i).getHead()) + "\");\n\n");
@@ -285,6 +292,9 @@ public class CppBuilder {
         sb.append("default: return std::pair<unsigned int, std::string>(0,\"\");\n");
         sb.append("}\n");
         sb.append("}// end function\n");
+
+        //===============================================================
+
         // 获取产生式用于输出reduce_sequence
         sb.append("std::string getProduction(unsigned int index) {\n");
         sb.append("switch(index) {\n");
@@ -302,7 +312,9 @@ public class CppBuilder {
         sb.append("}\n");
         sb.append("#endif //_ACTION_YACC_H\n");
 
-        //
+        //=======================
+
+        /*
 
         sb.append("struct node {\n");
         sb.append("std::string name;\n");
@@ -325,17 +337,19 @@ public class CppBuilder {
         sb.append("}\n");
         sb.append("#endif //_ACTION_YACC_H\n");
 
+         */
+
         writeFile("actionYacc.h", sb.toString());
     }
 
-    private boolean isAlpha(char c) {
+    private boolean isDigit(char c) {
         if ('0' <= c && c <= '9') {
             return true;
         }
         return false;
     }
 
-    private boolean isDigit(char c) {
+    private boolean isAlpha(char c) {
         if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) {
             return true;
         }

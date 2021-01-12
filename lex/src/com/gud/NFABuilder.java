@@ -3,11 +3,9 @@ package com.gud;
 import com.gud.struct.NFA;
 import com.gud.struct.NFAFragment;
 import com.gud.struct.NFAState;
+import com.gud.util.EscapeUtil;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * 构建NFA 非确定有限自动机
@@ -21,20 +19,17 @@ public class NFABuilder {
      * @param reg
      * @return
      */
-    public String postifx(String reg) {
-        String[] split = reg.split("");
+    public String[] postifx(String[] reg) {
+
         Stack<String> stack1 = new Stack<>();
         Deque<String> outputDeque = new ArrayDeque<>();
 
-        for (int pointer = 0; pointer < split.length; pointer++) {
+        for (int pointer = 0; pointer < reg.length; pointer++) {
             //运算符和左括号
-            if ("*".equals(split[pointer]) || "|".equals(split[pointer]) || "(".equals(split[pointer]) || "•".equals(split[pointer])) {
-                if (pointer > 0 && "\\".equals(split[pointer - 1])) {
-                    outputDeque.push(split[pointer]);
-                } else {
-                    stack1.push(split[pointer]);
-                }
-            } else if (")".equals(split[pointer]) && (!"\\".equals(split[pointer]))) {
+            if ("*".equals(reg[pointer]) || "|".equals(reg[pointer]) || "(".equals(reg[pointer]) || "•".equals(reg[pointer])) {
+
+                    stack1.push(reg[pointer]);
+            } else if (")".equals(reg[pointer])) {
                 //右括号
 
                 String top = stack1.pop();
@@ -43,7 +38,8 @@ public class NFABuilder {
                     top = stack1.pop();
                 }
             } else {
-                outputDeque.push(split[pointer]);
+                //普通符号
+                outputDeque.push(reg[pointer]);
             }
         }
 
@@ -53,11 +49,11 @@ public class NFABuilder {
 
         //stack转Str[]
 
-        StringBuilder sb = new StringBuilder();
+        List<String> res=new LinkedList<>();
         while (!outputDeque.isEmpty()) {
-            sb.append(outputDeque.removeLast());
+            res.add(outputDeque.removeLast());
         }
-        return sb.toString();
+        return res.toArray(new String[res.size()]);
     }
 
 
@@ -132,12 +128,8 @@ public class NFABuilder {
                 continue;
             } else if (target.length() == 2) {
                 target = String.valueOf(regSplit[i].toCharArray()[1]);
-                if (!keyCharStr.contains(target)) {
-                    System.out.println("Sth wrong");
-                }
             }
             //target现在是 非运算符
-            //symbolStack.push(target);
             if (target.length() == 1) {
                 char targetChar = target.toCharArray()[0];
                 NFAState eState = new NFAState(nfa);
@@ -162,14 +154,24 @@ public class NFABuilder {
         return resF;
     }
 
-    private NFA buildNFA(NFA nfa,Map<String, String> regMap) {
+    public NFA buildNFA(NFA nfa,Map<String[], String> regMap) {
         //NFA nfa=new NFA();
         NFAState startState=new NFAState(nfa);
         EscapeUtil escapeUtil = new EscapeUtil();
 
         boolean flag=true;
-        for (Map.Entry<String, String> entry : regMap.entrySet()) {
-            NFAFragment nfaFragment = buildNFAFragment(escapeUtil.escapeFormalizedStr(entry.getKey()), nfa);
+        for (Map.Entry<String[], String> entry : regMap.entrySet()) {
+
+            System.out.print("建立NFAFragment:");
+            for (String s: entry.getKey()){
+                System.out.println(s);
+            }
+
+
+
+            NFAFragment nfaFragment = buildNFAFragment(postifx(entry.getKey()), nfa);
+
+
             if(flag){
 //                startState= nfaFragment.startState;
                 startState.setOut1(nfaFragment.startState);

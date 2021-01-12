@@ -1,5 +1,7 @@
 package com.gud;
 
+import com.gud.util.EscapeUtil;
+
 import java.util.*;
 
 /**
@@ -8,25 +10,62 @@ import java.util.*;
  */
 public class RegFormalizer {
 
-    //转义
-    Map<String, String> escapeMap;
-    Map<String, String> escapeReverseMap;
+    //正规表达式中的转义
+    Map<String, String> regEscapeMap = new HashMap<>();
+    Map<String, String> regEscapeReverseMap = new HashMap<>();
+
+    Map<String, String> unicodeEscapeMap = new HashMap<>();
+
+    List<String> allCharList = new ArrayList<>();
 
 
     public RegFormalizer() {
-        escapeMap = new HashMap<>();
-        escapeReverseMap = new HashMap<>();
+        initAllCharList();
+        initUnicodeEscapeMap();
+        initRegEscapeMap();
+    }
+
+    private String transToLiteralSymbol(String s) {
+        return regEscapeMap.getOrDefault(s, s);
+    }
+
+    private String transToLiteralSymbol(int i) {
+        String s = String.valueOf((char) i);
+        return regEscapeMap.getOrDefault(s, s);
+    }
+
+    private void initRegEscapeMap() {
         String[] escape = {"+", "*", "•", "(", ")", "[", "]", "-", "^", "?", "|", ".", "\\"};
         String[] escaped = {"\\+", "\\*", "\\•", "\\(", "\\)", "\\[", "\\]", "\\-", "\\^", "\\?", "\\|", "\\.", "\\\\"};
         if (escape.length == escaped.length) {
             for (int i = 0; i < escape.length; i++) {
-                escapeMap.put(escape[i], escaped[i]);
-                escapeReverseMap.put(escaped[i], escape[i]);
+                regEscapeMap.put(escape[i], escaped[i]);
+                regEscapeReverseMap.put(escaped[i], escape[i]);
             }
         } else {
             System.out.println("出错!");
         }
+    }
 
+    private void initAllCharList() {
+        allCharList.add("(");
+        for (int i = 0; i < 127; i++) {
+            allCharList.add(transToLiteralSymbol(i));
+            allCharList.add("|");
+        }
+        allCharList.add(transToLiteralSymbol(127));
+        allCharList.add(")");
+    }
+
+    private void initUnicodeEscapeMap() {
+        Map<String, String> unicodeEscapeMap = new HashMap<>();
+        unicodeEscapeMap.put("t", "\t");
+        unicodeEscapeMap.put("n", "\n");
+        unicodeEscapeMap.put("b", "\b");
+        unicodeEscapeMap.put("f", "\f");
+        //tempEscapeMap.put("v","\v");
+        unicodeEscapeMap.put("r", "\r");
+        unicodeEscapeMap.put("s", " ");
     }
 
 
@@ -37,44 +76,34 @@ public class RegFormalizer {
      * @return
      * @todo java中没有/v
      */
-    private String processUnicodeEscape(String reg) {
-        Map<String, String> tempEscapeMap = new HashMap<>();
-        tempEscapeMap.put("t", "\t");
-        tempEscapeMap.put("n", "\n");
-        tempEscapeMap.put("b", "\b");
-        tempEscapeMap.put("f", "\f");
-        //java中只有\b \t \n \f \r
-        //tempEscapeMap.put("v","\v");
-        tempEscapeMap.put("r", "\r");
-        tempEscapeMap.put("s", " ");
-
+    private String[] processUnicodeEscape(String reg) {
         String[] split = reg.split("");
         for (int i = 0; i < split.length; i++) {
             if (split[i].equals("\\")) {
-                split[i] = "";
-                if (i + 1 < split.length && tempEscapeMap.containsKey(split[i + 1])) {
-                    split[i + 1] = tempEscapeMap.get(split[i + 1]);
+                if (i + 1 < split.length && unicodeEscapeMap.containsKey(split[i + 1])) {
+                    split[i] = "";
+                    split[i + 1] = unicodeEscapeMap.get(split[i + 1]);
                 }
             }
         }
-        return String.join("", split);
+        return split;
     }
 
     /**
      * @param reg
      * @return 返回的字符串中可能存在空串""
      */
-    private String[] processRegexEscape(String reg) {
-        String[] split = reg.split("");
-        for (int i = 0; i < split.length; i++) {
-            if (split[i].equals("\\")) {
-                if (i + 1 < split.length && escapeMap.containsKey(split[i + 1])) {
-                    split[i] = escapeMap.get(split[i + 1]);
-                    split[i + 1] = "";
+    private String[] processRegexEscape(String[] reg) {
+        // String[] split = reg.split("");
+        for (int i = 0; i < reg.length; i++) {
+            if (reg[i].equals("\\")) {
+                if (i + 1 < reg.length && regEscapeMap.containsKey(reg[i + 1])) {
+                    reg[i] = regEscapeMap.get(reg[i + 1]);
+                    reg[i + 1] = "";
                 }
             }
         }
-        return split;
+        return reg;
     }
 
     /**
@@ -83,27 +112,18 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformAllExp(String reg) {
-        String[] spilt = processRegexEscape(reg);
-
-        //创建 allChar
-        String[] temp = new String[128];
-        for (int i = 0; i < 128; i++) {
-            temp[i] = String.valueOf((char) i);
-            if (escapeMap.containsKey(temp[i])) {
-                temp[i] = escapeMap.get(temp[i]);
-            }
-        }
-        String allChar = "(" + String.join("|", temp) + ")";
+    private String[] transformAllExp(String[] reg) {
+        List<String> res = new LinkedList<>();
 
         //进行替换
-        for (int i = 0; i < spilt.length; i++) {
-            if (spilt[i].equals(".")) {
-                spilt[i] = allChar;
+        for (int i = 0; i < reg.length; i++) {
+            if (reg[i].equals(".")) {
+                res.addAll(allCharList);
+            } else {
+                res.add(reg[i]);
             }
         }
-
-        return String.join("", spilt);
+        return res.toArray(new String[res.size()]);
     }
 
 
@@ -113,52 +133,55 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformNegRangeExp(String reg) {
-        String[] split = processRegexEscape(reg);
-        for (int i = 0; i < split.length - 2; i++) {
-            if (split[i].equals("[") && split[i + 1].equals("^")) {
+    private String[] transformNegRangeExp(String[] reg) {
+        List<String> res = new LinkedList<>();
+
+        int i = 0;
+        for (; i < reg.length - 2; i++) {
+            if (reg[i].equals("[") && reg[i + 1].equals("^")) {
                 int end = 0;
                 String negCharSet = "";
-                for (int j = i + 2; j < split.length; j++) {
-                    negCharSet += split[j];
-                    if (split[j].equals("]")) {
+                for (int j = i + 2; j < reg.length; j++) {
+                    negCharSet += reg[j];
+                    if (reg[j].equals("]")) {
                         end = j;
                         break;
                     }
                 }
                 if (end != 0) {
-                    String[] temp = new String[128];
+                    List<String> temp = new LinkedList<>();
+                    temp.add("(");
                     for (int j = 0; j < 128; j++) {
-                        temp[j] = String.valueOf((char) j);
-                        if (escapeMap.containsKey(temp[j])) {
-                            temp[j] = escapeMap.get(temp[j]);
-                        }
-                        if (negCharSet.indexOf(temp[j]) != -1) {
-                            temp[j] = "";
+                        if (negCharSet.indexOf(transToLiteralSymbol(i)) == -1) {
+                            temp.add(transToLiteralSymbol(i));
+                            temp.add("|");
                         }
                     }
-                    split[i] = "(" + String.join("|", temp) + ")";
-                    for (int j = i + 1; j <= end; j++) {
-                        split[j] = "";
+                    temp.set(temp.size() - 1, ")");
+                    //@todo 看一下temp是否正确
+                    if (temp.size() > 2) {
+                        res.addAll(temp);
+                        while (i <= end) {
+                            i++;
+                        }
+                    } else {
+                        res.add(reg[i]);
                     }
+                } else {
+                    res.add(reg[i]);
                 }
+            } else {
+                res.add(reg[i]);
             }
         }
-        return String.join("", split);
+        for (; i < reg.length; i++) {
+            res.add(reg[i]);
+        }
+        return res.toArray(new String[res.size()]);
     }
 
     String escapeStr(String singleStr) {
-        return escapeMap.getOrDefault(singleStr, singleStr);
-    }
-
-    /**
-     * 对于/[ 我们想表达的是 [ 这个符号，和正规表达式的[符号区分开来
-     *
-     * @param escapedStr
-     * @return
-     */
-    String reverseEscapedStr(String escapedStr) {
-        return escapeReverseMap.getOrDefault(escapedStr, escapedStr);
+        return regEscapeMap.getOrDefault(singleStr, singleStr);
     }
 
 
@@ -168,23 +191,23 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformRangeExpAdvanced(String reg) {
-        String[] split = processRegexEscape(reg);
-        for (int i = 0; i < split.length; i++) {
-            if ("[".equals(split[i])) {
+    private String[] transformRangeExpAdvanced(String[] reg) {
+        List<String> res = new LinkedList<>();
+
+        for (int i = 0; i < reg.length; i++) {
+            if ("[".equals(reg[i])) {
                 List<String> starts = new LinkedList<>();
                 List<String> ends = new LinkedList<>();
                 int end = 0;
-                StringBuilder rangeContent = new StringBuilder();
-                for (int j = i + 1; j < split.length; ) {
-                    if ("]".equals(split[j])) {
+                for (int j = i + 1; j < reg.length; ) {
+                    if ("]".equals(reg[j])) {
                         end = j;
                         break;
                     }
-                    if (j + 2 < split.length) {
-                        if ("-".equals(split[j + 1])) {
-                            starts.add(split[j]);
-                            ends.add(split[j + 2]);
+                    if (j + 2 < reg.length) {
+                        if ("-".equals(reg[j + 1])) {
+                            starts.add(reg[j]);
+                            ends.add(reg[j + 2]);
                             j += 3;
                         } else {
                             System.out.println("sys.出现一些问题");
@@ -198,30 +221,38 @@ public class RegFormalizer {
                 if (starts.size() == ends.size()) {
                     Iterator<String> sIterator = starts.iterator();
                     Iterator<String> eIterator = ends.iterator();
-                    char endChar=0;
+                    char endChar = 0;
+                    List<String> temp = new LinkedList<>();
+                    temp.add("(");
                     while (sIterator.hasNext()) {
                         //进行转义 /t 转为 t
                         char startChar = escapeStr(sIterator.next()).toCharArray()[0];
                         endChar = escapeStr(eIterator.next()).toCharArray()[0];
-                        for (int j = (int) startChar; j < (int) endChar; j++) {
-                            rangeContent.append(escapeStr(String.valueOf((char) j)) + "|");
+                        for (int j = startChar; j < (int) endChar; j++) {
+                            temp.add(transToLiteralSymbol(j));
+                            temp.add("|");
                         }
 
                     }
-                    rangeContent.append(escapeStr(String.valueOf(endChar)));
+                    temp.add(transToLiteralSymbol(endChar));
+                    temp.add(")");
+                    if (temp.size() > 2) {
+                        res.addAll(temp);
+                        while (i <= end) {
+                            i++;
+                        }
+                    } else {
+                        res.add(reg[i]);
+                    }
                 } else {
+                    res.add(reg[i]);
                     System.out.println("sys.解析[?-?]出现问题");
                 }
-                String rangContentStr = rangeContent.toString();
-                if ((!"".equals(rangContentStr)) && end != 0) {
-                    split[i] = "(" + rangContentStr + ")";
-                    for (int j = i + 1; j <= end; j++) {
-                        split[j] = "";
-                    }
-                }
+            } else {
+                res.add(reg[i]);
             }
         }
-        return String.join("", split);
+        return res.toArray(new String[res.size()]);
     }
 
     /**
@@ -230,33 +261,39 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformOr(String reg) {
-        String[] split = processRegexEscape(reg);
-        for (int i = 0; i < split.length; i++) {
-            if ("[".equals(split[i])) {
+    private String[] transformOr(String[] reg) {
+        List<String> res = new LinkedList<>();
+
+        for (int i = 0; i < reg.length; i++) {
+            if ("[".equals(reg[i])) {
                 int end = 0;
-                StringBuilder rangeContent = new StringBuilder();
-                for (int j = i + 1; j < split.length; j++) {
-                    if ("]".equals(split[j])) {
+                List<String> temp = new LinkedList<>();
+                temp.add("(");
+                for (int j = i + 1; j < reg.length; j++) {
+                    if ("]".equals(reg[j])) {
                         end = j;
                         break;
                     } else {
-                        rangeContent.append(split[j] + "|");
+                        temp.add(reg[j]);
+                        temp.add("|");
                     }
                 }
-                if (rangeContent.length() >= 2) {
-                    rangeContent.deleteCharAt(rangeContent.length() - 1);
-                }
-                String rangContentStr = rangeContent.toString();
-                if ((!"".equals(rangContentStr)) && end != 0) {
-                    split[i] = "(" + rangContentStr + ")";
-                    for (int j = i + 1; j <= end; j++) {
-                        split[j] = "";
+                if (temp.size() >= 2) {
+                    temp.set(temp.size() - 1, ")");
+                    res.addAll(temp);
+
+                    while (i <= end) {
+                        i++;
                     }
+                } else {
+                    res.add(reg[i]);
                 }
+
+            } else {
+                res.add(reg[i]);
             }
         }
-        return String.join("", split);
+        return res.toArray(new String[res.size()]);
     }
 
     /**
@@ -265,30 +302,42 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformOneOrMore(String reg) {
-        String[] split = processRegexEscape(reg);
+    private String[] transformOneOrMore(String[] reg) {
+        List<String> res = new LinkedList<>();
         int pointer = 0;
-        for (; pointer < split.length; pointer++) {
-            if ("+".equals(split[pointer])) {
+        for (; pointer < reg.length; pointer++) {
+            if ("+".equals(reg[pointer])) {
                 //右括号的位置
                 int end = pointer - 1;
-                int start = findLeftBracketIndex(split, end);
+                int start = findLeftBracketIndex(reg, end);
+
                 if (start > -1) {
-                    StringBuilder sb = new StringBuilder();
+                    List<String> temp = new LinkedList<>();
+                    temp.add("(");
                     for (int i = start + 1; i <= end - 1; i++) {
-                        sb.append(split[i]);
+                        temp.add(reg[i]);
                     }
-                    String content = sb.toString();
-                    split[start] = "(" + content + ")•(" + content + ")?";
-                    for (int i = start + 1; i <= end + 1; i++) {
-                        split[i] = "";
+                    temp.add(")");
+
+                    for (int i = 0; i < end - start + 1; i++) {
+                        res.remove(res.size() - 1);
                     }
+
+                    //"(" + content + ")•(" + content + ")?";
+                    res.addAll(temp);
+                    res.add("•");
+                    res.addAll(temp);
+                    res.add("?");
+
                 } else {
+                    res.add(reg[pointer]);
                     System.out.println("()+匹配失败：" + reg);
                 }
+            } else {
+                res.add(reg[pointer]);
             }
         }
-        return String.join("", split);
+        return res.toArray(new String[res.size()]);
     }
 
     /**
@@ -297,32 +346,48 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String transformZeroOrMore(String reg) {
-        String[] split = processRegexEscape(reg);
-
-        for (int pointer = 0; pointer < split.length; pointer++) {
-            if ("?".equals(split[pointer])) {
+    private String[] transformZeroOrMore(String[] reg) {
+        List<String> res = new LinkedList<>();
+        for (int pointer = 0; pointer < reg.length; pointer++) {
+            if ("?".equals(reg[pointer])) {
                 //右括号的位置
                 int end = pointer - 1;
                 //对应的左括号的位置
-                int start = findLeftBracketIndex(split, end);
+                int start = findLeftBracketIndex(reg, end);
                 if (start > -1) {
-                    StringBuilder sb = new StringBuilder();
+                    List<String> temp = new LinkedList<>();
+                    temp.add("(");
                     for (int i = start + 1; i <= end - 1; i++) {
-                        sb.append(split[i]);
+                        temp.add(reg[i]);
                     }
-                    String content = sb.toString();
-                    split[start] = "(((" + content + ")*)|ø)";
-                    for (int i = start + 1; i <= end + 1; i++) {
-                        split[i] = "";
+                    temp.add(")");
+
+                    if (temp.size() > 2) {
+                        for (int i = 0; i < end - start + 1; i++) {
+                            res.remove(res.size() - 1);
+                        }
+
+                        res.add("(");
+                        res.add("(");
+                        res.addAll(temp);
+                        res.add("*");
+                        res.add(")");
+                        res.add("|");
+                        res.add("ø");
+                        res.add(")");
+                    } else {
+                        res.add(reg[pointer]);
                     }
                 } else {
+                    res.add(reg[pointer]);
                     System.out.println("()?匹配失败：" + reg);
                 }
+            } else {
+                res.add(reg[pointer]);
             }
         }
 
-        return String.join("", split);
+        return res.toArray(new String[res.size()]);
     }
 
     /**
@@ -372,7 +437,8 @@ public class RegFormalizer {
         tempReverseEscapeMap.put("\\?", "?");
         tempReverseEscapeMap.put("\\.", ".");
 
-        String[] split = processRegexEscape(reg);
+        //String[] split = processRegexEscape(reg);
+        String[] split = {};
         for (int i = 0; i < split.length; i++) {
             split[i] = tempReverseEscapeMap.getOrDefault(split[i], split[i]);
         }
@@ -385,45 +451,63 @@ public class RegFormalizer {
      * @param reg
      * @return
      */
-    private String addConnectPoint(String reg) {
-        String[] split = processRegexEscape(reg);
+    private String[] addConnectPoint(String[] reg) {
+        List<String> res = new LinkedList<>();
+
         int start = 0;
         String keyCharSetStr = "()|*•";
 
         StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < split.length - 1; i++) {
-            if ((!keyCharSetStr.contains(split[i])) || ")".equals(split[i])) {
-                if ((!keyCharSetStr.contains(split[i + 1])) || "(".equals(split[i + 1])) {
-                    sb.append(split[i]);
-                    sb.append("•");
+        int i = 0;
+        for (; i < reg.length - 1; i++) {
+            if ((!keyCharSetStr.contains(reg[i])) || ")".equals(reg[i])) {
+                if ((!keyCharSetStr.contains(reg[i + 1])) || "(".equals(reg[i + 1])) {
+//                    sb.append(split[i]);
+//                    sb.append("•");
+                    res.add(reg[i]);
+                    res.add("•");
                 } else {
-                    sb.append(split[i]);
+                    //sb.append(split[i]);
+                    res.add(reg[i]);
                 }
             } else {
-                sb.append(split[i]);
+                //sb.append(split[i]);
+                res.add(reg[i]);
             }
         }
-        sb.append(split[split.length - 1]);
-        return sb.toString();
+        for (; i < reg.length; i++) {
+            res.add(reg[i]);
+        }
+        return res.toArray(new String[res.size()]);
     }
 
     /**
      * @param reg 正规表达式
      * @return 规范化后的正规表达式
      */
-    public String formalize(String reg) {
+    public String[] formalize(String reg) {
+        EscapeUtil escapeUtil = new EscapeUtil();
         if (reg.startsWith("\"") && reg.startsWith("\"")) {
-            return reg;
+            String[] split = reg.split("");
+            List<String> res = new LinkedList<>();
+            for (int i = 1; i < split.length - 1; i++) {
+                res.add(transToLiteralSymbol(split[i]));
+            }
+            return addConnectPoint(
+                    escapeUtil.escapeReservedWord(
+                            res.toArray(new String[res.size()])));
         }
+
+        //@todo 删除了escapeReverse()，是否有问题
         return addConnectPoint(
-                escapeReverse(
+                escapeUtil.reverseEscapeFormalizedReg(
                         transformZeroOrMore(
                                 transformOneOrMore(
                                         transformOr(
                                                 transformRangeExpAdvanced(
                                                         transformNegRangeExp(
                                                                 transformAllExp(
-                                                                        processUnicodeEscape(reg)))))))));
+                                                                        processRegexEscape(
+                                                                                processUnicodeEscape(reg))))))))));
     }
 }

@@ -13,9 +13,11 @@ import java.util.*;
 public class DFABuilder {
 
     private int nfaSize;
+    private NFA nfa;
 
     public DFABuilder(NFA nfa) {
         this.nfaSize = nfa.getSize();
+        this.nfa=nfa;
     }
 
     /**
@@ -78,7 +80,7 @@ public class DFABuilder {
     }
 
 
-    private DFA buildDFA(NFA nfa){
+    public DFA buildDFA(){
 
         DFA dfa=new DFA();
 
@@ -149,7 +151,6 @@ public class DFABuilder {
         }
         return set1.containsAll(set2);//最后比containsAll
     }
-
 
 
 }

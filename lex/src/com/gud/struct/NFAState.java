@@ -16,7 +16,6 @@ public class NFAState {
     257 spilt
     <256 转移字符对应的int值
 
-
     ε 949
     ø 248
     */
@@ -74,7 +73,7 @@ public class NFAState {
     }
 
     public void setOut1(NFAState out1) {
-        c = 248;
+        c = 257;
         this.out1 = out1;
     }
 
