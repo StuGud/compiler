@@ -4,30 +4,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created By Gud on 2020/12/29 2:41 下午
+ * Created By Gud
  */
 public class NFA {
-    private int startStateId =0;
 
-    public void setStartStateId(int startStateId) {
-        this.startStateId = startStateId;
-    }
+    private int startStateId = 0;
 
-    private int size;
+    private int size = 0;
     //Map<Integer,Rules> endStateMap;
 
-    /**
-     * Integer 为128,表示空边
-     */
-    private Map<NFAState,String> endStateMap=new HashMap<>();
-    private Map<Integer,NFAState> nfaStateMap=new HashMap<>();
+    private Map<NFAState, String> endStateMap = new HashMap<>();
+    private Map<Integer, NFAState> nfaStateMap = new HashMap<>();
 
     public int getSize() {
         return size;
     }
 
-    public void setSize(int size) {
-        this.size = size;
+    public void setStartStateId(int startStateId) {
+        this.startStateId = startStateId;
     }
 
     public Map<NFAState, String> getEndStateMap() {
@@ -38,26 +32,24 @@ public class NFA {
         return nfaStateMap;
     }
 
-    public NFAState getStartState(){
-        if(size>=1){
+    public NFAState getStartState() {
+        if (size >= 1) {
             return nfaStateMap.get(startStateId);
-        }else{
-            NFAState startState=new NFAState(this);
+        } else {
+            NFAState startState = new NFAState(this);
             storeNfaState(startState);
-            startStateId=startState.getId();
+            startStateId = startState.getId();
             return startState;
         }
     }
 
-    public void storeNfaState(NFAState nfaState){
-        size++;
+    public void storeNfaState(NFAState nfaState) {
         nfaState.setId(size);
-        nfaStateMap.put(size,nfaState);
+        nfaStateMap.put(size, nfaState);
+        size++;
     }
 
-    public void addEndFunc(NFAState endState,String endFunc){
-        endStateMap.put(endState,endFunc);
+    public void addEndFunc(NFAState endState, String endFunc) {
+        endStateMap.put(endState, endFunc);
     }
-
-
 }

@@ -8,7 +8,7 @@ import com.gud.struct.NFAState;
 import java.util.*;
 
 /**
- * Created By Gud on 2021/1/1 5:02 下午
+ * Created By Gud
  */
 public class DFABuilder {
 
@@ -17,7 +17,7 @@ public class DFABuilder {
 
     public DFABuilder(NFA nfa) {
         this.nfaSize = nfa.getSize();
-        this.nfa=nfa;
+        this.nfa = nfa;
     }
 
     /**
@@ -55,21 +55,21 @@ public class DFABuilder {
         return closure;
     }
 
-    //map 通过key(c)到达的所有Nfa状态的集合,即DFAState;	c StateId NfaState
+    //map 通过key(c)到达的所有Nfa状态的集合,即DFAState的集合;	c StateId NfaState
 
-    private Map<Integer,Set<NFAState>> getOuts(DFAState dfaState){
-        Map<Integer,Set<NFAState>> outsMap=new HashMap<>();
-        for(NFAState nfaState: dfaState.getNFAStateSet()){
-            if(nfaState.getC()<256){
+    private Map<Integer, Set<NFAState>> getOuts(DFAState dfaState) {
+        Map<Integer, Set<NFAState>> outsMap = new HashMap<>();
+        for (NFAState nfaState : dfaState.getNFAStateSet()) {
+            if (nfaState.getC() < 256) {
 
-                assert nfaState.getOut1()!=null;
-                NFAState out= nfaState.getOut1();
+                assert nfaState.getOut1() != null;
+                NFAState out = nfaState.getOut1();
                 Set<NFAState> states = searchClosure(out);
 
-                if(outsMap.containsKey(nfaState.getC())){
+                if (outsMap.containsKey(nfaState.getC())) {
                     outsMap.get(nfaState.getC()).addAll(states);
-                }else{
-                    outsMap.put(nfaState.getC(),states);
+                } else {
+                    outsMap.put(nfaState.getC(), states);
                 }
 
 
@@ -80,13 +80,13 @@ public class DFABuilder {
     }
 
 
-    public DFA buildDFA(){
+    public DFA buildDFA() {
 
-        DFA dfa=new DFA();
+        DFA dfa = new DFA();
 
         //类似表格法
         //状态转换表
-        Map<DFAState,Map<Integer,DFAState>> transTable;
+        Map<DFAState, Map<Integer, DFAState>> transTable;
 
         //1.构造初试状态
         NFAState nfaStartState = nfa.getStartState();
@@ -94,15 +94,15 @@ public class DFABuilder {
         DFAState dfaStartState = new DFAState(S);
         dfa.storeState(dfaStartState);
 
-        Queue<DFAState> queue=new LinkedList<>();
+        Queue<DFAState> queue = new LinkedList<>();
         queue.add(dfaStartState);
 
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             DFAState curState = queue.poll();
             Map<Integer, Set<NFAState>> outs = getOuts(curState);
-            for(Map.Entry<Integer,Set<NFAState>> entry:outs.entrySet()){
+            for (Map.Entry<Integer, Set<NFAState>> entry : outs.entrySet()) {
                 Set<NFAState> nfaStateSet = entry.getValue();
-                DFAState newDFAState = createDFAState(dfa,queue,nfaStateSet);
+                DFAState newDFAState = createDFAState(dfa, queue, nfaStateSet);
                 curState.getEdge2StateMap().put(entry.getKey(), newDFAState);
             }
         }
@@ -110,10 +110,10 @@ public class DFABuilder {
         //EndFunc
         Map<Integer, DFAState> dfaStateMap = dfa.getStateMap();
         Map<NFAState, String> endStateMap = nfa.getEndStateMap();
-        for(Map.Entry<Integer,DFAState> entry:dfaStateMap.entrySet()){
-            for(NFAState nfaState: entry.getValue().getNFAStateSet()){
-                if(endStateMap.containsKey(nfaState)){
-                    dfa.addEndFunc(entry.getValue(),endStateMap.get(nfaState));
+        for (Map.Entry<Integer, DFAState> entry : dfaStateMap.entrySet()) {
+            for (NFAState nfaState : entry.getValue().getNFAStateSet()) {
+                if (endStateMap.containsKey(nfaState)) {
+                    dfa.addEndFunc(entry.getValue(), endStateMap.get(nfaState));
                 }
             }
         }
@@ -124,33 +124,32 @@ public class DFABuilder {
 
     /**
      * 如果已存在，返回已存在；否则新建
+     *
      * @param dfa
      * @param nfaStateSet
      * @return
      */
-    private DFAState createDFAState(DFA dfa,Queue<DFAState> queue,Set<NFAState> nfaStateSet){
+    private DFAState createDFAState(DFA dfa, Queue<DFAState> queue, Set<NFAState> nfaStateSet) {
         //判断这个集合是否已经创建过DFAState
-        for(Map.Entry<Integer,DFAState> entry:dfa.getStateMap().entrySet()){
+        for (Map.Entry<Integer, DFAState> entry : dfa.getStateMap().entrySet()) {
             DFAState dfaState = entry.getValue();
-            if(deepEqualSet(dfaState.getNFAStateSet(), nfaStateSet)){
+            if (deepEqualSet(dfaState.getNFAStateSet(), nfaStateSet)) {
                 return dfaState;
             }
         }
-        DFAState dfaState=new DFAState(nfaStateSet);
+        DFAState dfaState = new DFAState(nfaStateSet);
         dfa.storeState(dfaState);
         queue.add(dfaState);
         return dfaState;
     }
 
-    private boolean deepEqualSet(Set<?> set1, Set<?> set2){
-        if(set1 == null || set2 ==null){//null就直接不比了
+    private boolean deepEqualSet(Set<?> set1, Set<?> set2) {
+        if (set1 == null || set2 == null) {//null就直接不比了
             return false;
         }
-        if(set1.size()!=set2.size()){//大小不同也不用比了
+        if (set1.size() != set2.size()) {//大小不同也不用比了
             return false;
         }
         return set1.containsAll(set2);//最后比containsAll
     }
-
-
 }

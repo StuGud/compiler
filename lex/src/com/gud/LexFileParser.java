@@ -67,7 +67,8 @@ public class LexFileParser {
 
         while ((lineStr = buf.readLine()) != null) {
             line++;
-            System.out.println("line" + line + ": " + lineStr);
+
+            //System.out.println("line" + line + ": " + lineStr);
 
             switch (state) {
                 case 0: {
@@ -110,7 +111,7 @@ public class LexFileParser {
                     } else {
                         //outPut += lineStr;
                         getRegularAndFunc(lineStr);
-                        System.out.println(++test + " " + exp_Map.size());
+                        //System.out.println(++test + " " + exp_Map.size());
 
                     }
                     break;
@@ -176,7 +177,7 @@ public class LexFileParser {
             flag = false;
             for (Map.Entry<String, String> entry1 : def_Map.entrySet()) {
                 String target = "\\{" + entry1.getKey() + "}";
-                String replace = "{" + entry1.getValue() + "}";
+                String replace = entry1.getValue();
                 for (Map.Entry<String, String> entry2 : def_Map.entrySet()) {
                     if(entry1.getKey()!=entry2.getKey()){
                         if (entry2.getValue().indexOf(entry1.getKey()) != -1) {
@@ -191,7 +192,6 @@ public class LexFileParser {
     }
 
     private String replacePredefinedElements(String exp) {
-
         String replaced = exp;
         for (Map.Entry<String, String> entry : def_Map.entrySet()) {
             String target = "\\{" + entry.getKey() + "}";

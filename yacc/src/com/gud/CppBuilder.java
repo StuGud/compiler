@@ -77,7 +77,7 @@ public class CppBuilder {
             sb.append("\n\n");
         }
 
-        writeFile("LR1_state_set.txt", sb.toString());
+        writeFile("output/LR1_state_set.txt", sb.toString());
 
     }
 
@@ -111,7 +111,7 @@ public class CppBuilder {
             sb.append("\n");
         }
 
-        writeFile("LR1_parse_table.txt", sb.toString());
+        writeFile("output/LR1_parse_table.txt", sb.toString());
     }
 
     private void outputNonterminal() {
@@ -119,7 +119,7 @@ public class CppBuilder {
         for (Map.Entry<String, Integer> entry : nonTerminalMap.entrySet()) {
             sb.append(entry.getKey() + " " + entry.getValue() + "\n");
         }
-        writeFile("LR1_nonterminal_set.txt", sb.toString());
+        writeFile("output/LR1_nonterminal_set.txt", sb.toString());
     }
 
     public void outputTable() {
@@ -144,13 +144,14 @@ public class CppBuilder {
                     }
                 }
                 sb.append("_parseTable.insert(std::make_pair(" + entry.getKey() + ",tran));\n");
-                sb.append("tran.swap(std::map<std::string, TableItem>());\n\n");
+                sb.append("tran.clear();\n\n");
             }
         } else {
             for (int i = 0; i < lr1ParseTable.size(); i++) {
                 sb.append("// state" + i + "\n");
                 List<TableItem> row = lr1ParseTable.get(i);
                 for (int edge = 0; edge < symbolIndex; edge++) {
+                    System.out.println(row.get(edge).getAction());
                     if (row.get(edge).getAction() != ACTION_TYPE.ERROR) {
                         sb.append("tran.insert(std::make_pair(\"" + symbols.get(edge)
                                 + "\", TableItem(" + row.get(edge).getAction()
@@ -158,13 +159,13 @@ public class CppBuilder {
                     }
                 }
                 sb.append("_parseTable.insert(std::make_pair(" + i + ",tran));\n");
-                sb.append("tran.swap(std::map<std::string, TableItem>());\n\n");
+                sb.append("tran.clear();\n\n");
             }
         }
         sb.append("}\n");
         sb.append("#endif //_TABLE_YACC_H\n");
 
-        writeFile("tableYacc.h", sb.toString());
+        writeFile("output/tableYacc.h", sb.toString());
     }
 
 
@@ -178,7 +179,7 @@ public class CppBuilder {
             }
 
             //true = append file
-            FileWriter fileWriter = new FileWriter(file.getName(), true);
+            FileWriter fileWriter = new FileWriter(filename, true);
             BufferedWriter bufferWriter = new BufferedWriter(fileWriter);
 
             bufferWriter.write(data);
@@ -225,8 +226,8 @@ public class CppBuilder {
                             i++;
                         }
                         if ("width".equals(s) || "lexval".equals(s)) {
-                            translatedAction += "atoi(stack[stacksize - " + productionItemDeque.get(entry.getKey()).getBodyLength()
-                                    + " + " + pos + "]._map[\"" + s + "\"].c_str()";
+                            translatedAction += "atoi(stack[stackSize - " + productionItemDeque.get(entry.getKey()).getBodyLength()
+                                    + " + " + pos + "]._map[\"" + s + "\"].c_str())";
                         } else {
                             translatedAction += "stack[stackSize - " + productionItemDeque.get(entry.getKey()).getBodyLength()
                                     + " + " + pos + "]._map[\"" + s + "\"]";
@@ -272,7 +273,7 @@ public class CppBuilder {
         sb.append("switch(index) {\n");
 
         for (int i = 0; i < productionActionMap.size(); i++) {
-            sb.append("case" + i + ":");
+            sb.append("case " + i + ":");
             // 产生式显式表示
             sb.append("//" + symbols.get(productionItemDeque.get(i).getHead()) + "->");
             for (Integer curSymbol : productionItemDeque.get(i).getBody()) {
@@ -339,7 +340,7 @@ public class CppBuilder {
 
          */
 
-        writeFile("actionYacc.h", sb.toString());
+        writeFile("output/actionYacc.h", sb.toString());
     }
 
     private boolean isDigit(char c) {
@@ -381,7 +382,7 @@ public class CppBuilder {
         sb.append("return 0;\n");
         sb.append("}");
 
-        writeFile("yacc.c",sb.toString());
+        writeFile("output/yacc.c",sb.toString());
     }
 }
 

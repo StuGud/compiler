@@ -13,47 +13,71 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created By Gud on 2021/1/2 4:42 下午
+ * Created By Gud
  */
 public class CppBuilder {
 
     DFA dfa;
-    Map<DFAState, Set<String>> endFuncMap=new HashMap<>();
-    Map<Integer, DFAState> stateMap=new HashMap<>();
+    Map<DFAState, Set<String>> endFuncMap = new HashMap<>();
+    Map<Integer, DFAState> stateMap = new HashMap<>();
 
 
     public CppBuilder(DFA dfa) {
-       this.dfa=dfa;
+        this.dfa = dfa;
         endFuncMap = dfa.getEndFuncMap();
         stateMap = dfa.getStateMap();
     }
 
-    public void outputProgram(){
+    public void outputProgram() {
         outputTable();
         outputAction();
     }
 
     private void outputAction() {
 
-        StringBuilder sb=new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         sb.append("#ifndef _ACTION_LEX_H\n");
         sb.append("#define _ACTION_LEX_H\n");
         sb.append("#include <set>\n");
 
         sb.append("void initFinalSet(std::set<unsigned int>& finalSet) {\n");
-        for (Map.Entry<DFAState,Set<String>> entry:dfa.getEndFuncMap().entrySet()){
-            sb.append("finalSet.insert("+entry.getKey().getId()+ ");\n");
+        for (Map.Entry<DFAState, Set<String>> entry : dfa.getEndFuncMap().entrySet()) {
+            sb.append("finalSet.insert(" + entry.getKey().getId() + ");\n");
         }
         sb.append("}\n\n");
 
         sb.append("std::string performAction(unsigned int state) {\n");
         sb.append("switch(state) {\n");
-        for (Map.Entry<DFAState,Set<String>> entry:dfa.getEndFuncMap().entrySet()){
-            sb.append("case "+entry.getKey().getId()+": {");
-            for(String endFunc: entry.getValue()){
-                sb.append(endFunc);
+        for (Map.Entry<DFAState, Set<String>> entry : dfa.getEndFuncMap().entrySet()) {
+            sb.append("case " + entry.getKey().getId() + ": {");
+
+            if (entry.getValue().size() == 1) {
+                for (String endFunc : entry.getValue()) {
+                    sb.append(endFunc);
+                    //System.out.println("endFunc"+endFunc);
+                }
+            } else {
+                for (String endFunc : entry.getValue()) {
+                    if ((!endFunc.contains("id"))) {
+                        sb.append(endFunc);
+                        //System.out.println("endFunc"+endFunc);
+                    }
+                    if ((endFunc.contains("void"))) {
+                        sb.append(endFunc);
+                        //System.out.println("endFunc"+endFunc);
+                    }
+
+                }
             }
+
+//                StringBuilder temp=new StringBuilder();
+//                for(String endFunc: entry.getValue()){
+//                    temp.append(endFunc);
+//                }
+//                System.out.println("entrySet中函数个数大于一:"+temp.toString());
+
+
             sb.append("\n}\n");
         }
         sb.append("default: return \"\";\n");
@@ -62,11 +86,11 @@ public class CppBuilder {
 
         sb.append("#endif //_ACTION_LEX_H\n");
 
-        writeFile("output/actionLex.h",sb.toString());
+        writeFile("output/actionLex.h", sb.toString());
     }
 
     private void outputTable() {
-        StringBuilder sb=new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
         sb.append("#ifndef _TABLE_LEX_H\n");
         sb.append("#define _TABLE_LEX_H\n");
@@ -77,27 +101,26 @@ public class CppBuilder {
         sb.append("std::map<char, unsigned int> tran;\n");
 
         //@todo
-        for (int i = 1; i <= dfa.getStateMap().size(); i++) {
+        for (int i = 0; i < dfa.getStateMap().size(); i++) {
             sb.append("// state " + i + ";\n");
             System.out.println(i);
-            for (Map.Entry<Integer,DFAState> entry: dfa.getStateMap().get(i).getEdge2StateMap().entrySet()){
-                sb.append("tran.insert(std::make_pair(\'"+(char)(int)entry.getKey()+"\',"+entry.getValue().getId()+"));\n");
+            for (Map.Entry<Integer, DFAState> entry : dfa.getStateMap().get(i).getEdge2StateMap().entrySet()) {
+                sb.append("tran.insert(std::make_pair(\'" + (char) (int) entry.getKey() + "\'," + entry.getValue().getId() + "));\n");
             }
             sb.append("_minDFAStateTranfer->push_back(tran);\n");
-            sb.append("tran.swap(std::map<char, unsigned int>());\n\n");
+            sb.append("tran.clear();\n\n");
         }
         sb.append("}\n");
 
         sb.append("#endif //_TABLE_LEX_H\n");
 
-        writeFile("output/tableLex.h",sb.toString());
+        writeFile("output/tableLex.h", sb.toString());
     }
 
     /**
-     *
-     * @deprecated 废弃
      * @param dfa
      * @param lexFileParser
+     * @deprecated 废弃
      */
     public void buildCpp(DFA dfa, LexFileParser lexFileParser) {
         StringBuilder sb = new StringBuilder();
@@ -160,7 +183,7 @@ public class CppBuilder {
             }
 
             //true = append file
-            FileWriter fileWriter = new FileWriter(file.getName(), true);
+            FileWriter fileWriter = new FileWriter(filename, true);
             BufferedWriter bufferWriter = new BufferedWriter(fileWriter);
 
             bufferWriter.write(data);

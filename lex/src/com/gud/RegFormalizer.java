@@ -113,6 +113,10 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformAllExp(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+
+        outputStr(1,reg);
+
         List<String> res = new LinkedList<>();
 
         //进行替换
@@ -134,6 +138,10 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformNegRangeExp(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+
+        outputStr(2,reg);
+
         List<String> res = new LinkedList<>();
 
         int i = 0;
@@ -192,6 +200,10 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformRangeExpAdvanced(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+
+        outputStr(3,reg);
+
         List<String> res = new LinkedList<>();
 
         for (int i = 0; i < reg.length; i++) {
@@ -210,15 +222,17 @@ public class RegFormalizer {
                             ends.add(reg[j + 2]);
                             j += 3;
                         } else {
-                            System.out.println("sys.出现一些问题");
+                            end=0;
+                            System.out.println("范围匹配 - 失败[a-z]");
                             break;
                         }
                     } else {
+                        end=0;
                         System.out.println("sys.出现一些问题");
                         break;
                     }
                 }
-                if (starts.size() == ends.size()) {
+                if (end>=4&&starts.size() == ends.size()&&starts.size()>=1) {
                     Iterator<String> sIterator = starts.iterator();
                     Iterator<String> eIterator = ends.iterator();
                     char endChar = 0;
@@ -238,7 +252,7 @@ public class RegFormalizer {
                     temp.add(")");
                     if (temp.size() > 2) {
                         res.addAll(temp);
-                        while (i <= end) {
+                        while (i < end) {
                             i++;
                         }
                     } else {
@@ -262,6 +276,9 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformOr(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+
+        outputStr(4,reg);
         List<String> res = new LinkedList<>();
 
         for (int i = 0; i < reg.length; i++) {
@@ -278,7 +295,7 @@ public class RegFormalizer {
                         temp.add("|");
                     }
                 }
-                if (temp.size() >= 2) {
+                if (temp.size() >= 3) {
                     temp.set(temp.size() - 1, ")");
                     res.addAll(temp);
 
@@ -303,6 +320,8 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformOneOrMore(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+        outputStr(5,reg);
         List<String> res = new LinkedList<>();
         int pointer = 0;
         for (; pointer < reg.length; pointer++) {
@@ -315,6 +334,7 @@ public class RegFormalizer {
                     List<String> temp = new LinkedList<>();
                     temp.add("(");
                     for (int i = start + 1; i <= end - 1; i++) {
+                        //@todo
                         temp.add(reg[i]);
                     }
                     temp.add(")");
@@ -329,6 +349,11 @@ public class RegFormalizer {
                     res.addAll(temp);
                     res.add("?");
 
+                    pointer++;
+                    for(;pointer < reg.length; pointer++){
+                        res.add(reg[pointer]);
+                    }
+                    return transformOneOrMore(res.toArray(new String[res.size()]));
                 } else {
                     res.add(reg[pointer]);
                     System.out.println("()+匹配失败：" + reg);
@@ -347,6 +372,8 @@ public class RegFormalizer {
      * @return
      */
     private String[] transformZeroOrMore(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+        outputStr(6,reg);
         List<String> res = new LinkedList<>();
         for (int pointer = 0; pointer < reg.length; pointer++) {
             if ("?".equals(reg[pointer])) {
@@ -358,6 +385,7 @@ public class RegFormalizer {
                     List<String> temp = new LinkedList<>();
                     temp.add("(");
                     for (int i = start + 1; i <= end - 1; i++) {
+                        //@todo
                         temp.add(reg[i]);
                     }
                     temp.add(")");
@@ -368,13 +396,19 @@ public class RegFormalizer {
                         }
 
                         res.add("(");
-                        res.add("(");
+                        //res.add("(");
                         res.addAll(temp);
-                        res.add("*");
-                        res.add(")");
+                        //res.add("*");
+                        //res.add(")");
                         res.add("|");
                         res.add("ø");
                         res.add(")");
+
+                        pointer++;
+                        for(;pointer < reg.length; pointer++){
+                            res.add(reg[pointer]);
+                        }
+                        return transformZeroOrMore(res.toArray(new String[res.size()]));
                     } else {
                         res.add(reg[pointer]);
                     }
@@ -452,12 +486,12 @@ public class RegFormalizer {
      * @return
      */
     private String[] addConnectPoint(String[] reg) {
+        reg = Arrays.stream(reg).filter(s -> !s.isEmpty()).toArray(String[]::new);
+        outputStr(7,reg);
         List<String> res = new LinkedList<>();
 
-        int start = 0;
         String keyCharSetStr = "()|*•";
 
-        StringBuilder sb = new StringBuilder();
         int i = 0;
         for (; i < reg.length - 1; i++) {
             if ((!keyCharSetStr.contains(reg[i])) || ")".equals(reg[i])) {
@@ -509,5 +543,13 @@ public class RegFormalizer {
                                                                 transformAllExp(
                                                                         processRegexEscape(
                                                                                 processUnicodeEscape(reg))))))))));
+    }
+
+    private void outputStr(int i,String[] strings){
+//        System.out.print("before tran"+i+": ");
+//        for(String s:strings){
+//            System.out.print(s);
+//        }
+//        System.out.println();
     }
 }

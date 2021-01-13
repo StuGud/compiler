@@ -6,12 +6,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created By Gud on 2020/12/29 2:41 下午
+ * Created By Gud
  */
 public class DFAState {
-    private int id=0;
-    private Set<NFAState> nfaStateSet=new HashSet<>();
-    private Map<Integer,DFAState> edge2StateMap=new HashMap<>();
+
+    private int id = -1;
+    private Set<NFAState> nfaStateSet = new HashSet<>();
+    private Map<Integer, DFAState> edge2StateMap = new HashMap<>();
 
     public DFAState(Set<NFAState> nfaStateSet) {
         this.nfaStateSet = nfaStateSet;
