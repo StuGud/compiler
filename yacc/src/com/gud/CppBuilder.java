@@ -151,10 +151,10 @@ public class CppBuilder {
                 sb.append("// state" + i + "\n");
                 List<TableItem> row = lr1ParseTable.get(i);
                 for (int edge = 0; edge < symbolIndex; edge++) {
-                    System.out.println(row.get(edge).getAction());
+                    //System.out.println(row.get(edge).getAction());
                     if (row.get(edge).getAction() != ACTION_TYPE.ERROR) {
                         sb.append("tran.insert(std::make_pair(\"" + symbols.get(edge)
-                                + "\", TableItem(" + row.get(edge).getAction()
+                                + "\", TableItem(" + row.get(edge).getAction().actionValue+","
                                 + row.get(edge).getIndex() + ")));\n");
                     }
                 }
@@ -272,7 +272,7 @@ public class CppBuilder {
         sb.append("size_t stackSize = stack.size() - 1;\n");
         sb.append("switch(index) {\n");
 
-        for (int i = 0; i < productionActionMap.size(); i++) {
+        for (int i = 0; i < productionItemDeque.size(); i++) {
             sb.append("case " + i + ":");
             // 产生式显式表示
             sb.append("//" + symbols.get(productionItemDeque.get(i).getHead()) + "->");

@@ -243,7 +243,7 @@ public class LR1Builder {
     private ACTION_TYPE solveConflict(int shiftOP, int reduceOP) {
         if (!priorityMap.containsKey(shiftOP)) {
             return ACTION_TYPE.REDUCTION;
-        } else if (!productionActionMap.containsKey(reduceOP)) {
+        } else if (!priorityMap.containsKey(reduceOP)) {
             return ACTION_TYPE.SHIFT;
         } else {
             Integer sp = priorityMap.get(shiftOP);
@@ -308,7 +308,8 @@ public class LR1Builder {
         System.out.println("开始构造LR1分析表");
 
         for (int state = 0 ; state < lr1StateTransitionList.size(); state++) {
-            List<TableItem> temp = Collections.nCopies(symbolIndex, new TableItem());
+            List<TableItem> t=  Collections.nCopies(symbolIndex, new TableItem());
+            List<TableItem> temp=new ArrayList<>(t);
 
             //reduce
             for (LR1Item lr1Item : lr1StateTransitionList.get(state).getLr1State().getItemList()) {
@@ -318,12 +319,15 @@ public class LR1Builder {
                     //填入预测符 的规约项
                     for (Integer pred : lr1Item.getPredSet()) {
                         TableItem curTableItem = temp.get(pred);
+
                         switch (curTableItem.getAction()) {
                             case ERROR: {
                                 if (lr1Item.getProd().getIndex() == 0) {
-                                    curTableItem = new TableItem(ACTION_TYPE.ACCEPT, lr1Item.getProd().getIndex());
+                                    //curTableItem = new TableItem(ACTION_TYPE.ACCEPT, lr1Item.getProd().getIndex());
+                                    temp.set(pred, new TableItem(ACTION_TYPE.ACCEPT, lr1Item.getProd().getIndex()));
                                 } else {
-                                    curTableItem = new TableItem(ACTION_TYPE.REDUCTION, lr1Item.getProd().getIndex());
+                                    //curTableItem = new TableItem(ACTION_TYPE.REDUCTION, lr1Item.getProd().getIndex());
+                                    temp.set(pred, new TableItem(ACTION_TYPE.REDUCTION, lr1Item.getProd().getIndex()));
                                 }
                                 break;
                             }
@@ -339,14 +343,18 @@ public class LR1Builder {
             //shift
             for (Map.Entry<Integer, Integer> transEntry : lr1StateTransitionList.get(state).getTransMap().entrySet()) {
                 TableItem curTableItem = temp.get(transEntry.getKey());
+                Integer transEntryKey = transEntry.getKey();
+
                 switch (curTableItem.getAction()) {
                     case ERROR: {
                         if (!isNonTerminalNullableMap.containsKey(transEntry.getKey())) {
                             //终结符 @todo 是引用吗//
-                            curTableItem = new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue());
+                            //curTableItem = new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue());
+                            temp.set(transEntryKey, new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue()));
                         } else {
                             //非终结符
-                            curTableItem = new TableItem(ACTION_TYPE.GOTO_STATE, transEntry.getValue());
+                            //curTableItem = new TableItem(ACTION_TYPE.GOTO_STATE, transEntry.getValue());
+                            temp.set(transEntryKey, new TableItem(ACTION_TYPE.GOTO_STATE, transEntry.getValue()));
                         }
                         break;
                     }
@@ -365,7 +373,8 @@ public class LR1Builder {
                         }
                         //根据冲突消除规则应保留SHIFT操作
                         if (reduceOP != -1 && solveConflict(transEntry.getKey(), reduceOP) == ACTION_TYPE.SHIFT) {
-                            curTableItem = new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue());
+                            //curTableItem = new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue());
+                            temp.set(transEntryKey,new TableItem(ACTION_TYPE.SHIFT, transEntry.getValue()));
                         }
                         break;
                     }

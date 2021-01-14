@@ -118,7 +118,7 @@ type_spec
 
 expr_stmt
     : 'id' '=' expr
-    {   p = lookupPlace($1.lexeme); if (p.empty()) error(); emit("MOV",$3.place," ",p); }
+    {   p = lookupPlace($1.lexeme); if (p.empty()) error(); emit("MOV",$3.place,"",p); }
 	;
 
 expr
