@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * 构建NFA 非确定有限自动机
- *
+ * <p>
  * Created By Gud
  */
 public class NFABuilder {
@@ -22,28 +22,45 @@ public class NFABuilder {
      */
     public String[] transInfixToSuffix(String[] reg) {
 
-        Stack<String> stack1 = new Stack<>();
+        Stack<String> opStack = new Stack<>();
         Deque<String> outputDeque = new ArrayDeque<>();
 
         for (int pointer = 0; pointer < reg.length; pointer++) {
             //运算符和左括号
-            if ("*".equals(reg[pointer]) || "|".equals(reg[pointer]) || "(".equals(reg[pointer]) || "•".equals(reg[pointer])) {
-                stack1.push(reg[pointer]);
+            if ("|".equals(reg[pointer]) || "•".equals(reg[pointer])) {
+                String top="";
+                if(!opStack.isEmpty()){
+                    top = opStack.pop();
+                }
+                while ((!"(".equals(top))&&(!"".equals(top))) {
+                    outputDeque.push(top);
+                    if(!opStack.isEmpty()){
+                        top = opStack.pop();
+                    }else{
+                        break;
+                    }
+                }
+                opStack.push(top);
+                opStack.push(reg[pointer]);
+            } else if ("*".equals(reg[pointer])) {
+                outputDeque.push(reg[pointer]);
+            } else if ("(".equals(reg[pointer])) {
+                opStack.push(reg[pointer]);
             } else if (")".equals(reg[pointer])) {
                 //右括号
-                String top = stack1.pop();
-                while ((!"(".equals(top)) && (!"\\".equals(stack1.peek()))) {
+                String top = opStack.pop();
+                while ((!"(".equals(top))) {
                     outputDeque.push(top);
-                    top = stack1.pop();
+                    top = opStack.pop();
                 }
-            } else if(!"".equals(reg[pointer])) {
+            } else if (!"".equals(reg[pointer])) {
                 //普通符号
                 outputDeque.push(reg[pointer]);
             }
         }
 
-        while (!stack1.isEmpty()) {
-            outputDeque.push(stack1.pop());
+        while (!opStack.isEmpty()) {
+            outputDeque.push(opStack.pop());
         }
 
         //stack转Str[]
@@ -51,7 +68,7 @@ public class NFABuilder {
         List<String> res = new LinkedList<>();
         while (!outputDeque.isEmpty()) {
             String s = outputDeque.removeLast();
-            if(!"".equals(s)){
+            if (!"".equals(s)) {
                 res.add(s);
             }
         }
@@ -63,6 +80,7 @@ public class NFABuilder {
     0•(0|1|2|3)*((a|b|c)|(a|b|c))•((((a|b|c)|(a|b|c))*)|ø)
     00123|||abc||abc|||abc||abc|||*ø|•*•
      */
+
     /**
      * 这三个符号存在转义问题 * | •
      *
@@ -118,9 +136,9 @@ public class NFABuilder {
                         }
                         break;
                     }
-                    case "ø":{
+                    case "ø": {
                         NFAState eState = new NFAState(nfa);
-                        NFAState sState = new NFAState(nfa,eState);
+                        NFAState sState = new NFAState(nfa, eState);
                         fragmentStack.push(new NFAFragment(sState, eState));
                         break;
                     }
@@ -178,7 +196,7 @@ public class NFABuilder {
 //                startState= nfaFragment.startState;
                 startState.addEpsilonOut(nfaFragment.startState);
                 flag = false;
-            }else{
+            } else {
                 startState.addEpsilonOut(nfaFragment.startState);
                 NFAState temp = new NFAState(nfa, startState);
                 startState = temp;

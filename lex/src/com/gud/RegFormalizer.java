@@ -347,7 +347,7 @@ public class RegFormalizer {
                     res.addAll(temp);
                     res.add("•");
                     res.addAll(temp);
-                    res.add("?");
+                    res.add("*");
 
                     pointer++;
                     for(;pointer < reg.length; pointer++){
@@ -546,10 +546,10 @@ public class RegFormalizer {
     }
 
     private void outputStr(int i,String[] strings){
-//        System.out.print("before tran"+i+": ");
-//        for(String s:strings){
-//            System.out.print(s);
-//        }
-//        System.out.println();
+        System.out.print("before tran"+i+": ");
+        for(String s:strings){
+            System.out.print(s);
+        }
+        System.out.println();
     }
 }

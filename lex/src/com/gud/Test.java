@@ -57,7 +57,7 @@ public class Test {
 
         Map<Integer, DFAState> stateMap = dfa.getStateMap();
         DFAState curState = stateMap.get(0);
-        String[] test = "void".split("");
+        String[] test = "1212211".split("");
         for (int i = 0; i < test.length; i++) {
             System.out.println("现在状态编号:" + curState.getId() + " 可跳转边数:" + curState.getEdge2StateMap().size());
             System.out.println("出发边:" + test[i].charAt(0));

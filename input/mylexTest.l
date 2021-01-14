@@ -1,5 +1,5 @@
-number      {digit}+(\\.{digit}+)?(E[+-]?{digit}+)?
-digit       (1)
+digit       [0-1]
+number      {digit}+(\\.)?
 
 %{
 #include <string>
@@ -13,7 +13,6 @@ int numCount = 0;
 %%
 
 {number}    { ++numCount; return "num  c"; }
-void        { return "void"; }
 
 
 %%
